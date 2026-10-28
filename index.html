@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Oil Management Admin Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.0/dist/umd/supabase.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
+<style>
+:root{--a:#2D6CB5;--b:#7A4FA0;--c:#9C3F92;--br:linear-gradient(135deg,#2D6CB5,#7A4FA0 60%,#9C3F92);--bd:#D7DEE6;--mu:#5B6B7D;--tx:#10151C;--bg:#F1F4F9}
+*{box-sizing:border-box;margin:0;padding:0}body{font-family:Inter,Segoe UI,Arial,sans-serif;background:var(--bg);color:var(--tx);font-size:14px}
+.hidden{display:none!important}
+#login{position:fixed;inset:0;background:var(--br);display:flex;align-items:center;justify-content:center;padding:16px;z-index:200}
+#login .box{background:#fff;border-radius:16px;padding:28px;width:100%;max-width:380px}
+#login h2{margin-bottom:16px}
+.shell{display:flex;min-height:100vh}
+aside{width:230px;background:#1c2540;color:#cfd6ea;flex:none;display:flex;flex-direction:column;position:sticky;top:0;height:100vh}
+aside h1{font-size:16px;color:#fff;padding:20px 18px;background:var(--br);line-height:1.25}
+aside nav{padding:10px;flex:1}aside nav button{display:block;width:100%;text-align:left;background:none;border:none;color:inherit;font:inherit;font-weight:600;padding:12px 14px;border-radius:10px;cursor:pointer;margin-bottom:4px}
+aside nav button:hover{background:rgba(255,255,255,.08)}aside nav button.on{background:var(--br);color:#fff}
+aside .out{margin:10px}
+main{flex:1;min-width:0;padding:20px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap}
+.top h2{font-size:22px}
+.btn{border:none;border-radius:10px;padding:10px 16px;font:inherit;font-weight:700;cursor:pointer;background:var(--br);color:#fff}
+.btn.o{background:#fff;color:var(--a);border:1.5px solid var(--a)}.btn:disabled{opacity:.55;cursor:not-allowed}
+input,select{font:inherit;padding:9px 10px;border:1.5px solid var(--bd);border-radius:9px;background:#fff;min-width:0;width:100%}
+label{display:block;font-size:12px;font-weight:700;color:var(--mu);margin-bottom:4px}
+.card{background:#fff;border:1px solid var(--bd);border-radius:14px;padding:16px;margin-bottom:16px}
+.card h3{font-size:15px;margin-bottom:10px}
+.fgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;align-items:end}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin-bottom:16px}
+.kpi{border-radius:14px;padding:14px 16px;color:#fff;box-shadow:0 2px 8px rgba(0,0,0,.08)}
+.kpi .v{font-size:26px;font-weight:800;margin:4px 0}.kpi .l{font-size:12px;font-weight:700;opacity:.9}.kpi .s{font-size:11px;opacity:.85}
+.k1{background:linear-gradient(135deg,#2D6CB5,#4A8FE0)}.k2{background:linear-gradient(135deg,#7A4FA0,#A37BCB)}.k3{background:linear-gradient(135deg,#0E8F57,#2FC48B)}
+.k4{background:linear-gradient(135deg,#C2410C,#F59E0B)}.k5{background:linear-gradient(135deg,#9C3F92,#E0529C)}.k6{background:linear-gradient(135deg,#0E7490,#22B8CF)}
+.g2{display:grid;grid-template-columns:repeat(auto-fit,minmax(380px,1fr));gap:16px}
+.ch{position:relative;height:300px}
+.tw{overflow-x:auto}table{width:100%;border-collapse:collapse;font-size:13px}
+th{background:#EAF0FA;color:#27406b;text-align:left;padding:9px 10px;border:1px solid var(--bd);white-space:nowrap;cursor:default}
+th.s{cursor:pointer}td{padding:8px 10px;border:1px solid var(--bd);vertical-align:top}tbody tr:nth-child(even){background:#f8fafc}
+tr.cl{cursor:pointer}tr.cl:hover{background:#EAF2FB!important}
+.num{text-align:right;white-space:nowrap}
+.msg{padding:12px;border-radius:10px;margin-bottom:12px;font-weight:600}.er{background:#FDE8E7;color:#B42318}.ok{background:#E3FBEF;color:#0E7A4A}.in{background:#EAF2FB;color:#1d4f8f}
+.ins{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px}.ins div{background:#F6F2FB;border-radius:10px;padding:10px 12px}.ins b{display:block;font-size:11px;color:var(--mu);margin-bottom:3px}
+.pg{display:flex;gap:8px;align-items:center;justify-content:space-between;margin-top:10px;flex-wrap:wrap}
+.seg button{border:1.5px solid var(--a);background:#fff;color:var(--a);padding:6px 12px;font:inherit;font-weight:700;cursor:pointer}.seg button:first-child{border-radius:8px 0 0 8px}.seg button:last-child{border-radius:0 8px 8px 0}.seg button.on{background:var(--a);color:#fff}
+#ld{position:fixed;inset:0;background:rgba(255,255,255,.65);z-index:150;display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--a)}
+#ld i{width:34px;height:34px;border:4px solid #cbd7ee;border-top-color:var(--a);border-radius:50%;margin-right:12px;animation:sp .8s linear infinite}@keyframes sp{to{transform:rotate(360deg)}}
+.chk{display:flex;gap:8px;align-items:center;font-size:14px;font-weight:600;color:var(--tx)}.chk input{width:auto}
+@media(max-width:820px){.shell{flex-direction:column}aside{width:100%;height:auto;position:static}aside nav{display:flex;overflow-x:auto;gap:4px}aside nav button{white-space:nowrap;width:auto}aside .out{display:none}.g2{grid-template-columns:1fr}main{padding:12px}}
+</style></head><body>
+<div id="login"><div class="box"><h2>🛢️ Admin Sign In</h2><div id="lerr"></div>
+<div style="margin-bottom:10px"><label>Email</label><input id="em" type="email" autocomplete="username"></div>
+<div style="margin-bottom:14px"><label>Password</label><input id="pw" type="password" autocomplete="current-password" onkeydown="if(event.key==='Enter')signIn()"></div>
+<button class="btn" style="width:100%" id="sib" onclick="signIn()">Sign in</button></div></div>
+<div id="ld" class="hidden"><i></i>Loading…</div>
+<div class="shell hidden" id="shell">
+<aside><h1>🛢️ Oil Management<br>Admin Portal</h1><nav id="nav">
+<button data-s="dash" class="on">📊 Dashboard</button><button data-s="rec">📋 Consumption Records</button><button data-s="veh">🚜 Vehicle Analysis</button><button data-s="oil">🛢️ Oil Analysis</button><button data-s="xl">📥 Excel Reports</button></nav>
+<button class="btn o out" onclick="signOut()">Sign out</button></aside>
+<main>
+<div class="top"><h2 id="ttl">Dashboard</h2><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn o" onclick="refresh(true)">⟳ Refresh</button><button class="btn" onclick="gotoXl()">⬇ Download Excel Report</button></div></div>
+<div id="msg"></div>
+<div id="fbar" class="card"><div class="fgrid">
+<div><label>Period</label><select id="pre" onchange="preset(this.value)"><option value="30">Last 30 Days</option><option value="today">Today</option><option value="yest">Yesterday</option><option value="7">Last 7 Days</option><option value="tm">This Month</option><option value="pm">Previous Month</option><option value="custom">Custom Date Range</option></select></div>
+<div><label>From Date</label><input type="date" id="fFrom" onchange="custom()"></div><div><label>To Date</label><input type="date" id="fTo" onchange="custom()"></div>
+<div><label>Vehicle</label><input id="fVeh" list="vl" placeholder="All vehicles" onchange="refresh()"></div>
+<div><label>Oil Product</label><select id="fOil" onchange="refresh()"></select></div>
+<div><button class="btn o" style="width:100%" onclick="resetF()">Reset Filters</button></div></div></div>
+<datalist id="vl"></datalist>
+
+<section id="s-dash"><div class="kpis" id="kpis"></div>
+<div class="card"><h3>Quick Insights</h3><div class="ins" id="ins"></div></div>
+<div class="g2"><div class="card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><h3 style="margin:0">Oil Consumption Trend (litres)</h3><div class="seg" id="seg"><button data-g="d" class="on">Daily</button><button data-g="m">Monthly</button><button data-g="y">Yearly</button></div></div><div class="ch"><canvas id="cTr"></canvas></div></div>
+<div class="card"><h3>Consumption by Oil Product</h3><div class="ch"><canvas id="cOil"></canvas></div></div></div>
+<div class="card"><h3>Top 10 Vehicles by Consumption (litres) — click a bar for vehicle details</h3><div class="ch"><canvas id="cVeh"></canvas></div></div></section>
+
+<section id="s-rec" class="hidden"><div class="card"><div class="fgrid" style="margin-bottom:10px"><div><label>Search vehicle / oil</label><input id="rq" oninput="recPg=0;renderRec()"></div><div><label>Page size</label><select id="rps" onchange="recPg=0;renderRec()"><option>25</option><option>50</option><option>100</option><option>250</option></select></div></div>
+<div id="rsum" class="msg in"></div><div class="tw"><table id="rt"></table></div><div class="pg" id="rpg"></div></div></section>
+
+<section id="s-veh" class="hidden"><div class="card"><div class="fgrid" style="margin-bottom:10px"><div><label>Sort by</label><select id="vs" onchange="renderVeh()"><option value="l">Total consumption</option><option value="n">Vehicle name</option><option value="d">Last consumption date</option></select></div></div>
+<div class="tw"><table id="vt"></table></div></div><div id="vdet"></div></section>
+
+<section id="s-oil" class="hidden"><div class="card"><h3>Product Consumption</h3><div class="ch" style="height:320px"><canvas id="cOil2"></canvas></div></div>
+<div class="card"><div class="tw"><table id="ot"></table></div></div><div id="odet"></div></section>
+
+<section id="s-xl" class="hidden"><div class="card"><h3>Download Excel Report</h3><div class="fgrid">
+<div><label>Report Type</label><select id="xT"><option value="1">1. Complete Oil Consumption Report</option><option value="2">2. Vehicle-Wise Summary</option><option value="3">3. Oil Product-Wise Summary</option><option value="4">4. Vehicle and Oil Product Summary</option><option value="5">5. Daily Consumption Report</option><option value="6">6. Monthly Consumption Report</option><option value="7">7. Individual Vehicle History</option><option value="8">8. Custom Filtered Report</option></select></div>
+<div><label>From Date</label><input type="date" id="xF"></div><div><label>To Date</label><input type="date" id="xTo"></div>
+<div><label>Vehicle</label><input id="xV" list="vl" placeholder="All vehicles"></div><div><label>Oil Product</label><select id="xO"></select></div></div>
+<div style="display:flex;gap:22px;margin:14px 0;flex-wrap:wrap"><label class="chk"><input type="checkbox" id="xD" checked>Include detailed records</label><label class="chk"><input type="checkbox" id="xS" checked>Include summary analysis</label></div>
+<div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn o" onclick="xlFromGlobal()">Copy current dashboard filters</button><button class="btn" id="xB" onclick="downloadXlsx()">⬇ Download Excel Report</button></div>
+<p style="margin-top:12px;color:var(--mu);font-size:13px">Reports are built from every matching record (fetched in batches of 1,000 — never truncated). Quantities are totalled separately for litres and kg (grease).</p></div></section>
+</main></div>
+<script>
+const SB_URL="https://oshqaazzteqqukilghev.supabase.co";
+const SB_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9zaHFhYXp6dGVxcXVraWxnaGV2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU3Mzc4ODYsImV4cCI6MjEwMTMxMzg4Nn0.Rz33PdqBlq9yWqgNiz_4B_2fG6B3ztpk3dTx44He4F0";
+const REQUIRE_LOGIN=true; // false = open portal without sign-in (NOT secure)
+const sb=supabase.createClient(SB_URL,SB_KEY);
+const OILS=["Engine Oil Delvac MX 15W-40 (CF -4/SG/CI-4)","Gear Oil HD 80W-90(GL-5)","Gear Oil HD 85W-140(GL-5)","Transmission Fluid ATF 220 SYN Tech (Dexron III)","Brake Fluid DOT 4","Hydraulic Oil DTE 24 Ultra (ISO VG 32)","Hydraulic Oil DTE 25 Ultra (ISO VG 46)","Hydraulic Oil DTE 26 Ultra (ISO VG 68)","Grease EP 2 (NLGI -2)","Grease EP 3 (NLGI -3)","Grease (Synthetic) Mobilith SHC 220","Compressor Oil Rarus SHC 1025 (ISO VG 46)","Mobil Gear (Gear Oil)-600XP320","Coolant Extra Ready Mix"];
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const fq=n=>(Math.round(n*100)/100).toLocaleString("en-US",{maximumFractionDigits:2});
+const fdt=d=>new Date(d).toLocaleString("en-GB",{day:"2-digit",month:"short",year:"numeric",hour:"numeric",minute:"2-digit",hour12:true}).replace(/\b(am|pm)\b/,m=>m.toUpperCase());
+const p2=n=>String(n).padStart(2,"0"),ymd=d=>d.getFullYear()+"-"+p2(d.getMonth()+1)+"-"+p2(d.getDate()),ym=d=>d.getFullYear()+"-"+p2(d.getMonth()+1);
+const sod=s=>{const[a,b,c]=s.split("-").map(Number);return new Date(a,b-1,c,0,0,0,0)},eod=s=>{const[a,b,c]=s.split("-").map(Number);return new Date(a,b-1,c,23,59,59,999)};
+const qtxt=(q,u)=>fq(q)+" "+(u==="kg"?"kg":"L");
+let V=[],D=[],M=[],ALL=null,cache=new Map(),ch={},trG="d",recPg=0,busy=false;
+function msg(t,c){$("msg").innerHTML=t?`<div class="msg ${c}">${esc(t)}</div>`:"";}
+function load(on){$("ld").classList.toggle("hidden",!on);}
+/* ---- auth ---- */
+async function signIn(){$("lerr").innerHTML="";const em=$("em").value.trim().toLowerCase(),pw=$("pw").value;
+  if(!em||!pw){$("lerr").innerHTML='<div class="msg er">Enter email and password.</div>';return;}
+  $("sib").disabled=true;
+  try{const{data,error}=await sb.rpc("oil_admin_login",{p_email:em,p_password:pw});if(error)throw error;
+    if(data!==true){$("lerr").innerHTML='<div class="msg er">Invalid email or password.</div>';return;}
+    sessionStorage.setItem("oilAdmin",em);start();}
+  catch(e){$("lerr").innerHTML='<div class="msg er">Sign-in failed: '+esc(e.message||e)+'</div>';}
+  finally{$("sib").disabled=false;}}
+function signOut(){sessionStorage.removeItem("oilAdmin");location.reload();}
+async function boot(){if(!REQUIRE_LOGIN||sessionStorage.getItem("oilAdmin"))start();}
+async function start(){$("login").classList.add("hidden");$("shell").classList.remove("hidden");
+  $("fOil").innerHTML='<option value="">All oil products</option>'+OILS.map(o=>`<option>${esc(o)}</option>`).join("");$("xO").innerHTML=$("fOil").innerHTML;
+  preset("30",true);
+  try{const{data,error}=await sb.from("master").select("code, vehicle_name").order("vehicle_name").range(0,4999);if(error)throw error;V=data||[];
+   $("vl").innerHTML=V.map(v=>`<option value="${esc(v.vehicle_name)}">`).join("");}catch(e){msg("Could not load vehicle list: "+(e.message||e),"er");}
+  xlFromGlobal();refresh();}
+/* ---- filters ---- */
+function preset(p,silent){const t=new Date(),d0=new Date(t.getFullYear(),t.getMonth(),t.getDate());let f=d0,e=d0;
+  if(p==="yest"){f=e=new Date(d0.getTime()-864e5);}else if(p==="7"){f=new Date(d0.getTime()-6*864e5);}else if(p==="30"){f=new Date(d0.getTime()-29*864e5);}
+  else if(p==="tm"){f=new Date(t.getFullYear(),t.getMonth(),1);}else if(p==="pm"){f=new Date(t.getFullYear(),t.getMonth()-1,1);e=new Date(t.getFullYear(),t.getMonth(),0);}
+  else if(p==="custom")return;$("fFrom").value=ymd(f);$("fTo").value=ymd(e);if(!silent)refresh();}
+function custom(){$("pre").value="custom";refresh();}
+function resetF(){$("pre").value="30";preset("30",true);$("fVeh").value="";$("fOil").value="";refresh();}
+function vehCode(txt){txt=(txt||"").trim();if(!txt)return"";const l=txt.toLowerCase();const v=V.find(x=>x.vehicle_name.toLowerCase()===l);return v?v.code:null;}
+function readF(pre){const g=pre?{f:"xF",t:"xTo",v:"xV",o:"xO",p:null}:{f:"fFrom",t:"fTo",v:"fVeh",o:"fOil",p:null};
+  const from=$(g.f).value,to=$(g.t).value;if(from&&to&&to<from)throw new Error("End date cannot be earlier than the start date.");
+  const code=vehCode($(g.v).value);if(code===null)throw new Error("Select a vehicle from the suggestion list (or clear the vehicle field).");
+  return{from,to,code,oil:$(g.o).value,op:g.p?$(g.p).value:""};}
+/* ---- data ---- */
+async function fetchAll(f){const key=JSON.stringify(f);if(cache.has(key))return cache.get(key);let out=[],a=0;
+  for(;;){let q=sb.from("oil_entries").select("*").order("entry_datetime",{ascending:false}).order("id",{ascending:false}).range(a,a+999);
+    if(f.from)q=q.gte("entry_datetime",sod(f.from).toISOString());if(f.to)q=q.lte("entry_datetime",eod(f.to).toISOString());
+    if(f.code)q=q.eq("code",f.code);if(f.oil)q=q.eq("oil_type",f.oil);if(f.op)q=q.eq("operator_name",f.op);
+    const{data,error}=await q;if(error)throw error;out=out.concat(data||[]);if(!data||data.length<1000)break;a+=1000;}
+  cache.set(key,out);return out;}
+async function loadAll(){if(ALL)return;let a=0,o=[];for(;;){const{data,error}=await sb.from("oil_entries").select("code,operator_name").range(a,a+999).order("id");if(error)throw error;o=o.concat(data||[]);if(!data||data.length<1000)break;a+=1000;}
+  ALL={codes:new Set(o.map(r=>r.code)),ops:[...new Set(o.map(r=>r.operator_name).filter(Boolean))].sort()};
+}
+async function refresh(force){if(busy)return;let f;try{f=readF(false);}catch(e){msg(e.message,"er");return;}
+  if(force){cache.clear();ALL=null;}busy=true;load(true);msg("");
+  try{const t=new Date(),ms=ymd(new Date(t.getFullYear(),t.getMonth(),1));
+   [D,M]=await Promise.all([fetchAll(f),fetchAll({from:ms,to:ymd(t),code:"",oil:"",op:""})]);
+   await loadAll();renderAll();if(!D.length)msg("No oil consumption records match the selected filters.","in");else if(force)msg("Data refreshed — "+D.length+" records loaded.","ok");}
+  catch(e){msg("Could not load data: "+(e.message||e)+(/permission|policy|row-level/i.test(e.message||"")?" — check the RLS setup in oil-admin.sql.":""),"er");}
+  finally{busy=false;load(false);}}
+/* ---- aggregation ---- */
+function grp(rows,kf){const m=new Map();for(const r of rows){const k=kf(r);let g=m.get(k);if(!g){g={k,l:0,kg:0,n:0,veh:new Set(),last:0,rows:[]};m.set(k,g);}const q=+r.quantity||0;if(r.unit==="kg")g.kg+=q;else g.l+=q;g.n++;g.veh.add(r.code);const t=Date.parse(r.entry_datetime);if(t>g.last)g.last=t;g.rows.push(r);}return[...m.values()];}
+const tot=rows=>rows.reduce((s,r)=>{const q=+r.quantity||0;r.unit==="kg"?s.kg+=q:s.l+=q;return s;},{l:0,kg:0});
+const qs=g=>fq(g.l)+" L"+(g.kg?" + "+fq(g.kg)+" kg":"");
+function renderAll(){renderKpi();renderIns();renderCharts();renderRec();renderVeh();renderOil();}
+function renderKpi(){const t=tot(D),now=new Date(),td=ymd(now),tdR=M.filter(r=>ymd(new Date(r.entry_datetime))===td),a=tot(tdR),b=tot(M);
+  const k=(c,l,v,s)=>`<div class="kpi ${c}"><div class="l">${l}</div><div class="v">${v}</div><div class="s">${s}</div></div>`,per=$("fFrom").value+" → "+$("fTo").value;
+  $("kpis").innerHTML=k("k1","Total Oil Consumed",fq(t.l)+" L","Selected period: "+per+(t.kg?" · + "+fq(t.kg)+" kg grease":""))+k("k2","Total Consumption Entries",D.length.toLocaleString(),"Selected period")+
+   k("k3","Vehicles with Oil Consumption",new Set(D.map(r=>r.code)).size,"Selected period")+k("k4","Oil Products Used",new Set(D.map(r=>r.oil_type)).size,"Selected period")+
+   k("k5","Today's Consumption",fq(a.l)+" L","Today only, all vehicles"+(a.kg?" · + "+fq(a.kg)+" kg":""))+k("k6","This Month's Consumption",fq(b.l)+" L","Calendar month, all vehicles"+(b.kg?" · + "+fq(b.kg)+" kg":""));}
+function renderIns(){const byO=grp(D.filter(r=>r.unit!=="kg"),r=>r.oil_type).sort((a,b)=>b.l-a.l),byV=grp(D,r=>r.code).sort((a,b)=>b.l-a.l);
+  const nm=c=>(D.find(r=>r.code===c)||V.find(v=>v.code===c)||{}).vehicle_name||c,inP=new Set(D.map(r=>r.code));
+  const noP=ALL?V.filter(v=>ALL.codes.has(v.code)&&!inP.has(v.code)).length:"…",never=ALL?V.filter(v=>!ALL.codes.has(v.code)).length:"…";
+  const t=tot(M.filter(r=>ymd(new Date(r.entry_datetime))===ymd(new Date())));
+  const i=(h,v)=>`<div><b>${h}</b>${v}</div>`;
+  $("ins").innerHTML=i("Most-consumed oil product (litres)",byO[0]?esc(byO[0].k)+" — "+fq(byO[0].l)+" L":"—")+i("Highest-consumption vehicle",byV[0]?esc(nm(byV[0].k))+" — "+qs(byV[0]):"—")+
+   i("Total consumption today",fq(t.l)+" L"+(t.kg?" + "+fq(t.kg)+" kg":""))+i("Total consumption this month",qs(tot(M)))+
+   i("Vehicles with no record in this period (but consumed before)",noP)+i("Vehicles that have never consumed oil",never);}
+function mk(id,cfg){if(ch[id])ch[id].destroy();ch[id]=new Chart($(id),cfg);}
+function trendData(){const g=grp(D.filter(r=>r.unit!=="kg"),r=>{const d=new Date(r.entry_datetime);return trG==="d"?ymd(d):trG==="m"?ym(d):String(d.getFullYear());}).sort((a,b)=>a.k<b.k?-1:1);return g;}
+function renderCharts(){const g=trendData();
+  mk("cTr",{type:trG==="d"?"line":"bar",data:{labels:g.map(x=>x.k),datasets:[{label:"Litres",data:g.map(x=>Math.round(x.l*100)/100),borderColor:"#2D6CB5",backgroundColor:trG==="d"?"rgba(45,108,181,.15)":"#7A4FA0",fill:true,tension:.25}]},options:{maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>fq(c.raw)+" L"}}},scales:{y:{beginAtZero:true,title:{display:true,text:"Litres"}},x:{ticks:{maxRotation:60,autoSkip:true}}}}});
+  const o=grp(D,r=>r.oil_type).sort((a,b)=>(b.l+b.kg)-(a.l+a.kg)),u=x=>x.kg?"kg":"L";
+  const oc=(id)=>mk(id,{type:"bar",data:{labels:o.map(x=>x.k),datasets:[{data:o.map(x=>Math.round((x.l+x.kg)*100)/100),backgroundColor:o.map(x=>x.kg?"#F59E0B":"#2D6CB5")}]},options:{indexAxis:"y",maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>fq(c.raw)+" "+u(o[c.dataIndex])+" · "+o[c.dataIndex].n+" entries"}}},scales:{x:{beginAtZero:true,title:{display:true,text:"Quantity (L; grease in kg — orange)"}},y:{ticks:{font:{size:10}}}}}});
+  oc("cOil");
+  const v=grp(D.filter(r=>r.unit!=="kg"),r=>r.code).sort((a,b)=>b.l-a.l).slice(0,10),nm=c=>(D.find(r=>r.code===c)||{}).vehicle_name||c;
+  mk("cVeh",{type:"bar",data:{labels:v.map(x=>nm(x.k)),datasets:[{data:v.map(x=>Math.round(x.l*100)/100),backgroundColor:"#9C3F92"}]},options:{maintainAspectRatio:false,onClick:(e,els)=>{if(els.length)openVeh(v[els[0].index].k);},plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>fq(c.raw)+" L"}}},scales:{y:{beginAtZero:true,title:{display:true,text:"Litres"}}}}});}
+$("seg").onclick=e=>{const b=e.target.closest("button");if(!b)return;trG=b.dataset.g;[...$("seg").children].forEach(x=>x.classList.toggle("on",x===b));renderCharts();};
+/* ---- records ---- */
+function renderRec(){const q=($("rq").value||"").toLowerCase().trim(),ps=+$("rps").value;
+  const rows=q?D.filter(r=>(r.vehicle_name+" "+r.oil_type).toLowerCase().includes(q)):D,t=tot(rows),pages=Math.max(1,Math.ceil(rows.length/ps));if(recPg>=pages)recPg=pages-1;
+  $("rsum").textContent=rows.length.toLocaleString()+" matching records · "+fq(t.l)+" L"+(t.kg?" + "+fq(t.kg)+" kg":"")+" · Period "+$("fFrom").value+" → "+$("fTo").value;
+  $("rt").innerHTML="<thead><tr><th>Entry Date &amp; Time</th><th>Vehicle Name</th><th>Oil Product</th><th>Quantity</th><th>Meter Reading</th><th>Purpose</th></tr></thead><tbody>"+
+   (rows.length?rows.slice(recPg*ps,recPg*ps+ps).map(r=>`<tr><td>${esc(fdt(r.entry_datetime))}</td><td>${esc(r.vehicle_name)}</td><td>${esc(r.oil_type)}</td><td class="num">${esc(qtxt(+r.quantity,r.unit))}</td><td class="num">${r.meter_reading!=null?esc(r.meter_reading):"—"}</td><td>${esc(r.purpose||"—")}</td></tr>`).join(""):'<tr><td colspan="6" style="text-align:center;color:var(--mu)">No records</td></tr>')+"</tbody>";
+  $("rpg").innerHTML=`<span>Page ${recPg+1} of ${pages}</span><span><button class="btn o" ${recPg?"":"disabled"} onclick="recPg--;renderRec()">‹ Prev</button> <button class="btn o" ${recPg<pages-1?"":"disabled"} onclick="recPg++;renderRec()">Next ›</button></span>`;}
+/* ---- vehicle analysis ---- */
+function lastSub(rows){let mx=0;rows.forEach(r=>{const t=Date.parse(r.entry_datetime);if(t>mx)mx=t;});return rows.filter(r=>Date.parse(r.entry_datetime)===mx);}
+function renderVeh(){let g=grp(D,r=>r.code);const s=$("vs").value,nm=x=>x.rows[0].vehicle_name;
+  g.sort(s==="l"?(a,b)=>(b.l+b.kg)-(a.l+a.kg):s==="n"?(a,b)=>nm(a).localeCompare(nm(b),undefined,{numeric:true}):(a,b)=>b.last-a.last);
+  $("vt").innerHTML="<thead><tr><th>Vehicle Name</th><th>Total Consumption</th><th>Entries</th><th>Last Consumption</th><th>Last Product(s) Used</th><th>Last Quantity</th></tr></thead><tbody>"+
+   (g.length?g.map(x=>{const ls=lastSub(x.rows),lt=tot(ls);return`<tr class="cl" onclick="openVeh('${esc(x.k).replace(/'/g,"\\'")}')"><td><b>${esc(nm(x))}</b></td><td class="num">${esc(qs(x))}</td><td class="num">${x.n}</td><td>${esc(fdt(x.last))}</td><td>${ls.map(r=>esc(r.oil_type)+" ("+esc(qtxt(+r.quantity,r.unit))+")").join("<br>")}</td><td class="num">${esc(qs(lt))}</td></tr>`;}).join(""):'<tr><td colspan="6" style="text-align:center;color:var(--mu)">No records in the selected period</td></tr>')+"</tbody>";}
+async function openVeh(code){tab("veh");load(true);try{const rows=await fetchAll({from:"",to:"",code,oil:"",op:""}),name=(rows[0]||V.find(v=>v.code===code)||{}).vehicle_name||code;
+  window._vrows=rows;const by=grp(rows,r=>r.oil_type);
+  $("vdet").innerHTML=`<div class="card"><h3>${esc(name)} — all-time history</h3><div class="tw"><table><thead><tr><th>Oil Product</th><th>Latest Consumption</th><th>Last Qty</th><th>Time Elapsed</th><th>Total</th><th>Entries</th></tr></thead><tbody>`+
+   OILS.map(o=>{const g=by.find(x=>x.k===o);if(!g)return`<tr><td>${esc(o)}</td><td colspan="5" style="color:var(--mu)">No consumption recorded</td></tr>`;const last=g.rows.reduce((a,b)=>Date.parse(b.entry_datetime)>Date.parse(a.entry_datetime)?b:a);
+    return`<tr><td><b>${esc(o)}</b></td><td>${esc(fdt(last.entry_datetime))}</td><td class="num">${esc(qtxt(+last.quantity,last.unit))}</td><td data-t="${Date.parse(last.entry_datetime)}" style="font-weight:700;color:var(--a)">${el(Date.parse(last.entry_datetime))}</td><td class="num">${esc(qs(g))}</td><td class="num">${g.n}</td></tr>`;}).join("")+
+   `</tbody></table></div><div style="margin:14px 0 8px;max-width:360px"><label>Filter history by oil product</label><select id="vf" onchange="vHist()"><option value="">All products</option>${OILS.map(o=>`<option>${esc(o)}</option>`).join("")}</select></div><div class="tw"><table id="vh"></table></div></div>`;
+  vHist();$("vdet").scrollIntoView({behavior:"smooth"});}catch(e){msg("Could not load vehicle history: "+(e.message||e),"er");}finally{load(false);}}
+function vHist(){const f=$("vf").value,r=window._vrows.filter(x=>!f||x.oil_type===f);
+  $("vh").innerHTML="<thead><tr><th>Date &amp; Time</th><th>Oil Product</th><th>Quantity</th><th>Meter</th><th>Purpose</th></tr></thead><tbody>"+r.slice(0,300).map(x=>`<tr><td>${esc(fdt(x.entry_datetime))}</td><td>${esc(x.oil_type)}</td><td class="num">${esc(qtxt(+x.quantity,x.unit))}</td><td class="num">${x.meter_reading!=null?esc(x.meter_reading):"—"}</td><td>${esc(x.purpose||"—")}</td></tr>`).join("")+"</tbody>"+(r.length>300?`<caption style="caption-side:bottom;padding:8px;color:var(--mu)">Showing latest 300 of ${r.length} records — use the Excel report for the full history.</caption>`:"");}
+function el(t){let m=Math.max(0,Math.floor((Date.now()-t)/6e4));const d=Math.floor(m/1440),h=Math.floor(m%1440/60),mi=m%60,u=(n,w)=>n+" "+w+(n===1?"":"s");return d?u(d,"day")+(h?" "+u(h,"hour"):""):h?u(h,"hour")+(mi?" "+u(mi,"minute"):""):u(mi,"minute");}
+setInterval(()=>document.querySelectorAll("#vdet [data-t]").forEach(e=>e.textContent=el(+e.dataset.t)),30000);
+/* ---- oil analysis ---- */
+function renderOil(){const g=grp(D,r=>r.oil_type).sort((a,b)=>(b.l+b.kg)-(a.l+a.kg));
+  mk("cOil2",{type:"bar",data:{labels:g.map(x=>x.k),datasets:[{data:g.map(x=>Math.round((x.l+x.kg)*100)/100),backgroundColor:g.map(x=>x.kg?"#F59E0B":"#7A4FA0")}]},options:{indexAxis:"y",maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>fq(c.raw)+" "+(g[c.dataIndex].kg?"kg":"L")}}},scales:{y:{ticks:{font:{size:10}}}}}});
+  $("ot").innerHTML="<thead><tr><th>Oil Product</th><th>Total Quantity</th><th>Entries</th><th>Vehicles</th><th>Latest Consumption</th></tr></thead><tbody>"+(g.length?g.map((x,i)=>`<tr class="cl" onclick="oilDet(${i})"><td><b>${esc(x.k)}</b></td><td class="num">${esc(qs(x))}</td><td class="num">${x.n}</td><td class="num">${x.veh.size}</td><td>${esc(fdt(x.last))}</td></tr>`).join(""):'<tr><td colspan="5" style="text-align:center;color:var(--mu)">No records in the selected period</td></tr>')+"</tbody>";
+  window._og=g;$("odet").innerHTML="";}
+function oilDet(i){const x=window._og[i],v=grp(x.rows,r=>r.code).sort((a,b)=>(b.l+b.kg)-(a.l+a.kg));
+  $("odet").innerHTML=`<div class="card"><h3>${esc(x.k)} — vehicles using this product</h3><div class="tw"><table><thead><tr><th>Vehicle</th><th>Total</th><th>Entries</th><th>Latest</th></tr></thead><tbody>${v.map(y=>`<tr><td>${esc(y.rows[0].vehicle_name)}</td><td class="num">${esc(qs(y))}</td><td class="num">${y.n}</td><td>${esc(fdt(y.last))}</td></tr>`).join("")}</tbody></table></div></div>`;$("odet").scrollIntoView({behavior:"smooth"});}
+/* ---- nav ---- */
+const TT={dash:"Dashboard",rec:"Consumption Records",veh:"Vehicle Analysis",oil:"Oil Analysis",xl:"Excel Reports"};
+function tab(s){for(const k in TT)$("s-"+k).classList.toggle("hidden",k!==s);[...$("nav").children].forEach(b=>b.classList.toggle("on",b.dataset.s===s));$("ttl").textContent=TT[s];$("fbar").classList.toggle("hidden",s==="xl");if(s==="veh")$("vdet").scrollTop=0;}
+$("nav").onclick=e=>{const b=e.target.closest("button");if(b)tab(b.dataset.s);};
+function gotoXl(){tab("xl");}
+function xlFromGlobal(){$("xF").value=$("fFrom").value;$("xTo").value=$("fTo").value;$("xV").value=$("fVeh").value;$("xO").value=$("fOil").value;}
+/* ---- Excel ---- */
+const xd=d=>new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate(),d.getHours(),d.getMinutes(),d.getSeconds()));
+const xday=d=>new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));
+const xtime=d=>(d.getHours()*3600+d.getMinutes()*60+d.getSeconds())/86400;
+const HF={type:"pattern",pattern:"solid",fgColor:{argb:"FF2D6CB5"}};
+function sheet(wb,name,cols,rows){const ws=wb.addWorksheet(name);ws.columns=cols.map(c=>({header:c.h,key:c.k,width:c.w,style:c.f?{numFmt:c.f}:{}}));
+  rows.forEach(r=>ws.addRow(r));const hr=ws.getRow(1);hr.font={bold:true,color:{argb:"FFFFFFFF"},name:"Calibri",size:11};hr.fill=HF;hr.alignment={vertical:"middle",horizontal:"center",wrapText:true};hr.height=24;
+  ws.views=[{state:"frozen",ySplit:1}];if(rows.length)ws.autoFilter={from:{row:1,column:1},to:{row:1,column:cols.length}};
+  ws.eachRow((row,i)=>{if(i>0)row.eachCell(c=>{c.border={top:{style:"thin",color:{argb:"FFD0D7E2"}},bottom:{style:"thin",color:{argb:"FFD0D7E2"}},left:{style:"thin",color:{argb:"FFD0D7E2"}},right:{style:"thin",color:{argb:"FFD0D7E2"}}};});});return ws;}
+const DT="dd-mmm-yyyy h:mm AM/PM",NQ="#,##0.00";
+function build(rows,f,type,incD,incS){const wb=new ExcelJS.Workbook();wb.creator="Oil Management Admin Portal";wb.created=new Date();
+  const t=tot(rows),vg=grp(rows,r=>r.code).sort((a,b)=>(b.l+b.kg)-(a.l+a.kg)),og=grp(rows,r=>r.oil_type).sort((a,b)=>(b.l+b.kg)-(a.l+a.kg));
+  const dg=grp(rows,r=>ymd(new Date(r.entry_datetime))).sort((a,b)=>a.k<b.k?-1:1),mg=grp(rows,r=>ym(new Date(r.entry_datetime))).sort((a,b)=>a.k<b.k?-1:1);
+  const want={1:["D","V","O","Dy"],2:["V"],3:["O"],4:["VO"],5:["Dy"],6:["Mo"],7:["D","O"],8:["D"]}[type].filter(s=>s!=="D"||incD);if(incD&&!want.includes("D"))want.unshift("D");
+  const hasD=want.includes("D"),n=rows.length;
+  if(incS){const ws=wb.addWorksheet("Summary");ws.columns=[{width:34},{width:26},{width:18},{width:18},{width:18}];
+   const nmv=f.code?((V.find(v=>v.code===f.code)||{}).vehicle_name||"Selected vehicle"):"All vehicles";
+   const put=(a,b,fm)=>{const r=ws.addRow([a,b]);r.getCell(1).font={bold:true};if(fm)r.getCell(2).numFmt=fm;return r;};
+   ws.addRow(["Oil Consumption Report"]).font={bold:true,size:16,color:{argb:"FF2D6CB5"}};ws.addRow([]);
+   put("Report generated",xd(new Date()),DT);put("Reporting period",(f.from||"start")+" to "+(f.to||"latest"));put("Vehicle filter",nmv);put("Oil product filter",f.oil||"All oil products");
+   ws.addRow([]);const r1=n?`COUNTA('Consumption Details'!D2:D${n+1})`:null;
+   const rr=put("Total consumption entries",n);const rl=put("Total consumption (Litres)",t.l,NQ),rk=put("Total consumption (kg, grease)",t.kg,NQ);
+   if(hasD&&n){rr.getCell(2).value={formula:r1,result:n};rl.getCell(2).value={formula:`SUMIFS('Consumption Details'!E2:E${n+1},'Consumption Details'!F2:F${n+1},"Litre")`,result:t.l};rk.getCell(2).value={formula:`SUMIFS('Consumption Details'!E2:E${n+1},'Consumption Details'!F2:F${n+1},"kg")`,result:t.kg};}
+   put("Number of vehicles",vg.length);put("Number of oil products",og.length);ws.addRow([]);
+   const tb=(title,cols,data)=>{ws.addRow([title]).font={bold:true,size:13};const h=ws.addRow(cols);h.font={bold:true,color:{argb:"FFFFFFFF"}};h.fill=HF;data.forEach(r=>ws.addRow(r).eachCell((c,i)=>{if(i>1&&typeof c.value==="number")c.numFmt=NQ;}));ws.addRow([]);};
+   tb("Oil product-wise summary",["Oil Product","Total (L)","Total (kg)","Entries"],og.map(x=>[x.k,x.l,x.kg,x.n]));
+   tb("Vehicle-wise summary",["Vehicle","Total (L)","Total (kg)","Entries"],vg.map(x=>[x.rows[0].vehicle_name,x.l,x.kg,x.n]));}
+  for(const s of want){
+   if(s==="D")sheet(wb,"Consumption Details",[{h:"Entry Date",k:"a",w:14,f:"dd-mmm-yyyy"},{h:"Entry Time",k:"b",w:12,f:"h:mm AM/PM"},{h:"Vehicle Name",k:"c",w:22},{h:"Oil Product Name",k:"e",w:46},{h:"Quantity Consumed",k:"f",w:14,f:NQ},{h:"Unit",k:"g",w:9},{h:"Vehicle Meter Reading",k:"h",w:14,f:"#,##0.##"},{h:"Purpose",k:"i",w:22},{h:"Remarks",k:"k",w:28}],
+     rows.map(r=>{const d=new Date(r.entry_datetime);return{a:xday(d),b:xtime(d),c:r.vehicle_name,e:r.oil_type,f:+r.quantity,g:r.unit,h:r.meter_reading!=null?+r.meter_reading:null,i:r.purpose||"",k:r.remarks||""};}));
+   if(s==="V")sheet(wb,"Vehicle Summary",[{h:"Vehicle Name",k:"a",w:24},{h:"Total Consumption (L)",k:"c",w:16,f:NQ},{h:"Total (kg, grease)",k:"d",w:16,f:NQ},{h:"Number of Entries",k:"e",w:12},{h:"Last Consumption",k:"f",w:22,f:DT}],vg.map(x=>({a:x.rows[0].vehicle_name,c:x.l,d:x.kg,e:x.n,f:xd(new Date(x.last))})));
+   if(s==="O")sheet(wb,"Oil Product Summary",[{h:"Oil Product Name",k:"a",w:46},{h:"Total Consumption (L)",k:"b",w:16,f:NQ},{h:"Total (kg, grease)",k:"c",w:16,f:NQ},{h:"Number of Entries",k:"d",w:12},{h:"Number of Vehicles",k:"e",w:12},{h:"Last Consumption",k:"f",w:22,f:DT}],og.map(x=>({a:x.k,b:x.l,c:x.kg,d:x.n,e:x.veh.size,f:xd(new Date(x.last))})));
+   if(s==="VO"){const m=grp(rows,r=>r.code+"|"+r.oil_type).sort((a,b)=>a.rows[0].vehicle_name.localeCompare(b.rows[0].vehicle_name,undefined,{numeric:true})||(a.k<b.k?-1:1));
+     sheet(wb,"Vehicle x Oil Summary",[{h:"Vehicle Name",k:"a",w:24},{h:"Oil Product Name",k:"c",w:46},{h:"Total Consumption (L)",k:"d",w:16,f:NQ},{h:"Total (kg, grease)",k:"e",w:16,f:NQ},{h:"Number of Entries",k:"f",w:12},{h:"Last Consumption",k:"g",w:22,f:DT}],m.map(x=>({a:x.rows[0].vehicle_name,c:x.rows[0].oil_type,d:x.l,e:x.kg,f:x.n,g:xd(new Date(x.last))})));}
+   const per=(nmS,g,hd)=>sheet(wb,nmS,[{h:hd,k:"a",w:14},{h:"Total Consumption (L)",k:"b",w:16,f:NQ},{h:"Total (kg, grease)",k:"c",w:16,f:NQ},{h:"Number of Entries",k:"d",w:12},{h:"Number of Vehicles",k:"e",w:12}],g.map(x=>({a:x.k,b:x.l,c:x.kg,d:x.n,e:x.veh.size})));
+   if(s==="Dy")per("Daily Summary",dg,"Date");if(s==="Mo")per("Monthly Summary",mg,"Month");}
+  return wb;}
+async function downloadXlsx(){if(busy)return;let f;try{f=readF(true);}catch(e){msg(e.message,"er");return;}
+  const type=+$("xT").value;if(type===7&&!f.code){msg("Choose a vehicle for the Individual Vehicle History report.","er");return;}
+  busy=true;$("xB").disabled=true;load(true);msg("");
+  try{const rows=await fetchAll(f);if(!rows.length){msg("No records match the selected filters — nothing to export.","in");return;}
+   const wb=build(rows,f,type,$("xD").checked,$("xS").checked),buf=await wb.xlsx.writeBuffer();
+   const ds=rows.map(r=>ymd(new Date(r.entry_datetime))).sort(),a=f.from||ds[0],b=f.to||ds[ds.length-1],nm={1:"Oil_Consumption_Report",2:"Vehicle_Summary",3:"Oil_Product_Summary",4:"Vehicle_Oil_Summary",5:"Daily_Report",6:"Monthly_Report",7:"Vehicle_History_"+((V.find(v=>v.code===f.code)||{}).vehicle_name||""),8:"Custom_Report"}[type];
+   const url=URL.createObjectURL(new Blob([buf],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"})),l=document.createElement("a");l.href=url;l.download=`${nm}_${a}_to_${b}.xlsx`.replace(/[^\w.\-]/g,"_");document.body.appendChild(l);l.click();l.remove();setTimeout(()=>URL.revokeObjectURL(url),4000);
+   msg("Excel report downloaded: "+rows.length.toLocaleString()+" records, "+fq(tot(rows).l)+" L"+(tot(rows).kg?" + "+fq(tot(rows).kg)+" kg":"")+".","ok");}
+  catch(e){msg("Report failed: "+(e.message||e),"er");}finally{busy=false;$("xB").disabled=false;load(false);}}
+boot();
+</script></body></html>
